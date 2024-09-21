@@ -1,49 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import PokemonCard from '../components/PokemonCard';
+import SearchBar from '../components/SearchBar';
+import { fetchPokemons } from '../utils/FetchPokemon';
+import { addToFavorites } from '../utils/LocalStorage';
+import { useInfiniteScroll } from '../utils/InfiniteScroll';
 
 const HomePage = () => {
   const [pokemonList, setPokemonList] = useState([]);
   const [offset, setOffset] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useInfiniteScroll(() => setOffset((prev) => prev + 20));
 
   useEffect(() => {
-    fetch(`https://pokeapi.co/api/v2/pokemon?limit=20&offset=${offset}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const promises = data.results.map((pokemon) =>
-          fetch(pokemon.url).then((res) => res.json())
-        );
-        Promise.all(promises).then((results) => {
-          setPokemonList((prev) => [...prev, ...results]);
-        });
+    const loadPokemons = async () => {
+      const newPokemons = await fetchPokemons(offset);
+      setPokemonList((prev) => {
+        const existingIds = new Set(prev.map(p => p.id));
+        return [...prev, ...newPokemons.filter(p => !existingIds.has(p.id))];
       });
+    };
+    loadPokemons();
   }, [offset]);
 
-  const addToFavorites = (pokemon) => {
-    const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-    localStorage.setItem('favorites', JSON.stringify([...favorites, pokemon]));
-  };
-
-  const handleScroll = () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
-      setOffset((prev) => prev + 20);
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const filteredPokemon = pokemonList.filter((pokemon) =>
+    pokemon.name && pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <>
-    <h2 className='max-w-6xl text-3xl font-semibold text-start mx-auto mt-32 mb-10'>Pokemons</h2>
-    <div className="container max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
-      {pokemonList.map((pokemon) => (
-        <PokemonCard key={pokemon.id} pokemon={pokemon} addToFavorites={addToFavorites} />
-      ))}
-    </div>
+      <div className='mt-36 block sm:flex max-w-6xl mx-auto justify-between items-center gap-10'>
+        <h2 className='text-3xl font-semibold text-left ps-4 my-5'>Pokemones</h2>
+        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      </div>
+      <div className="container mt-10 max-w-6xl mx-auto p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredPokemon.map((pokemon) => (
+            <PokemonCard key={pokemon.id} pokemon={pokemon} addToFavorites={addToFavorites} />
+          ))}
+        </div>
+      </div>
     </>
   );
 };
 
 export default HomePage;
+

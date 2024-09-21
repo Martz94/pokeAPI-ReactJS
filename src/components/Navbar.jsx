@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
-    <nav className="bg-blue-500 p-4 fixed top-0 left-0 right-0">
-      <div className="container max-w-6xl mx-auto flex justify-between items-center">
+    <nav className="bg-blue-500 p-3 fixed top-0 left-0 right-0">
+      <div className="container px-0 sm:px-4 max-w-6xl mx-auto flex justify-between items-center">
         <div>
           <img
             src="https://raw.githubusercontent.com/PokeAPI/media/master/logo/pokeapi_256.png"
             alt="Pokemon Logo"
-            className="h-6 md:h-12"
+            className="h-10 sm:h-12"
           />
         </div>
         <ul className="flex gap-0 md:gap-3">
