@@ -9,19 +9,28 @@ const HomePage = () => {
   const [pokemonList, setPokemonList] = useState([]);
   const [offset, setOffset] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null); 
 
   useInfiniteScroll(() => setOffset((prev) => prev + 20));
 
   useEffect(() => {
     const loadPokemons = async () => {
+      try {
       const newPokemons = await fetchPokemons(offset);
       setPokemonList((prev) => {
         const existingIds = new Set(prev.map(p => p.id));
         return [...prev, ...newPokemons.filter(p => !existingIds.has(p.id))];
       });
+    } catch (error) {
+      setError('Hubo un problema al cargar los Pokémon')
+    }
     };
     loadPokemons();
   }, [offset]);
+
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>; 
+  }
 
   const filteredPokemon = pokemonList.filter((pokemon) =>
     pokemon.name && pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
